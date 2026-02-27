@@ -1,29 +1,29 @@
+import os
 import csv
+from datetime import datetime
 
+# load the expenses from the file 
 def load_expenses():
     expenses = []
     with open("expense.csv", "r") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
-            row["amount"] = float(row["amount"])
+            row["Amount"] = float(row["Amount"])
             expenses.append(row)
 
     return expenses
 
-def add_expense(date, category, amount):
-    with open("expense.csv", "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([date, category, amount])
-
+# saving the data into file
 def save_expenses(expenses):
     with open ("expense.csv", "w", newline="") as file:
-        fieldnames = ["date", "category", "amount"]
+        fieldnames = ["Date", "Category", "Amount"]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         writer.writeheader()     
         writer.writerows(expenses)
 
+# View total expense 
 def view_expenses():
     expenses = load_expenses()
 
@@ -34,22 +34,26 @@ def view_expenses():
     print("\n--- All Expenses ---")
     for expense in expenses:
         print(
-            f"Date: {expense['date']} | "
-            f"Category: {expense['category']} | "
-            f"Amount: ₹{expense['amount']} "
+            f"Date: {expense['Date']} | "
+            f"Category: {expense['Category']} | "
+            f"Amount: ₹{expense['Amount']} "
+  
         )
-
-def filter_expenses(category):
+# filtering the perticular expense and showing total expense
+def filter_expenses(Category):
     expenses = load_expenses()
 
     filtered = []
+    Total = 0
 
     for expense in expenses:
-        if expense["Category"].lower() == category.lower():
+        if expense["Category"].lower() == Category.lower():
             filtered.append(expense)
+            Total += expense["Amount"]
 
-    return filtered
+    return filtered, Total
 
+# return the total expense
 def total_expenses():
     expenses = load_expenses()
 
@@ -69,19 +73,30 @@ def main():
         print("5. Exit")
 
         choice = input("Enter your choice: ")
-
         match choice:
             case "1":
-                date = input("Enter the date: ")
-                category = input("Enter the category: ")
-                amount = float(input("Enter the amount: "))
+                while True:
+                    Date = input("Enter the date (yyyy-mm-dd):")
+                    try:
+                        valid_date = datetime.strptime(Date, "%Y-%m-%d")
+                        break
+                    except ValueError:
+                        print("Enter valid date form")
+
+                Category = input("Enter the category: ")
+                while True:
+                    try:
+                        Amount = float(input("Enter the amount: "))
+                        break
+                    except ValueError:
+                        print("Enter the integer")
 
                 expenses = load_expenses()
 
                 expenses.append({
-                    "date": date,
-                    "category": category,
-                    "amount": amount
+                    "Date": Date,
+                    "Category": Category,
+                    "Amount": Amount
                 })
 
                 save_expenses(expenses)
@@ -93,13 +108,14 @@ def main():
 
             case "3":
                 category = input("Enter category to filter: ")
-                filtered = filter_expenses(category)
+                filtered, total = filter_expenses(category)
 
                 if not filtered:
                     print("No matching expenses found.")
                 else:
                     for expense in filtered:
                         print(expense)
+                    print(total)     
 
             case "4":
                 total = total_expenses()
